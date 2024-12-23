@@ -90,6 +90,7 @@ class CartPanel(QWidget):
         cartItemLayout.addWidget(removeButton)
 
         cartItemWidget.setLayout(cartItemLayout)
+        cartItemWidget.setFixedSize(1100, 300)  # Устанавливаем фиксированный размер для панели товара
         cartItemWidget.setStyleSheet("border: 1px solid #ccc; padding: 10px; margin: 5px;")
         return cartItemWidget
 
