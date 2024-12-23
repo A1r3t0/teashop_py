@@ -80,9 +80,19 @@ class DatabaseHelper:
     @staticmethod
     def getCartItemsByUserId(userId, role):
         if role == "customer":
-            query = "SELECT t.id, t.name, c.quantity, t.price FROM order_tea c JOIN teas t ON c.tea_id = t.id WHERE c.order_id = (SELECT id FROM orders WHERE user_id = %s LIMIT 1)"
+            query = """
+            SELECT t.id, t.name, c.quantity, t.price, t.image_path
+            FROM order_tea c
+            JOIN teas t ON c.tea_id = t.id
+            WHERE c.order_id = (SELECT id FROM orders WHERE user_id = %s LIMIT 1)
+            """
         elif role == "admin":
-            query = "SELECT t.id, t.name, c.quantity, t.price FROM admin_order_tea c JOIN teas t ON c.tea_id = t.id WHERE c.admin_order_id = (SELECT id FROM admin_orders WHERE admin_id = %s LIMIT 1)"
+            query = """
+            SELECT t.id, t.name, c.quantity, t.price, t.image_path
+            FROM admin_order_tea c
+            JOIN teas t ON c.tea_id = t.id
+            WHERE c.admin_order_id = (SELECT id FROM admin_orders WHERE admin_id = %s LIMIT 1)
+            """
         else:
             return []
         connection = DatabaseHelper.getConnection()

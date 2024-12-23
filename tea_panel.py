@@ -20,13 +20,12 @@ class TeaPanel(QWidget):
         layout.addWidget(nameLabel)
 
         imageLabel = QLabel()
-        image_path = self.tea.get('image_path', 'default_image.png')  # Используем запасное изображение, если image_path не установлен
-        pixmap = QPixmap(image_path).scaled(200, 200, Qt.KeepAspectRatio)
+        pixmap = QPixmap(self.tea['image_path']).scaled(200, 200, Qt.KeepAspectRatio)
         imageLabel.setPixmap(pixmap)
         imageLabel.setAlignment(Qt.AlignCenter)
         layout.addWidget(imageLabel)
 
-        priceLabel = QLabel(f"Цена: {self.tea['price']} ₽")
+        priceLabel = QLabel(f"Цена: {self.tea['price']} ₽ / 5 г")
         priceLabel.setFont(QFont("Arial", 14, QFont.Bold))
         layout.addWidget(priceLabel)
 

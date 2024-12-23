@@ -1,7 +1,8 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QScrollArea, QMessageBox
-from PySide6.QtGui import QFont, QPixmap
+from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt
 from database_helper import DatabaseHelper
+from cart_item_panel import CartItemPanel  # Импортируем новый класс CartItemPanel
 
 class CartPanel(QWidget):
     def __init__(self, teaShopApp):
@@ -56,50 +57,10 @@ class CartPanel(QWidget):
 
         # Display all cart items
         for item in self.allCartItems:
-            cartItemWidget = self.createCartItemWidget(item)
+            cartItemWidget = CartItemPanel(item, self.teaShopApp)
             self.cartItemsLayout.addWidget(cartItemWidget)
 
         self.calculateTotalPrice()
-
-    def createCartItemWidget(self, item):
-        cartItemWidget = QWidget()
-        cartItemLayout = QHBoxLayout()
-
-        imageLabel = QLabel()
-        pixmap = QPixmap(f"{item['name']}.png").scaled(80, 80, Qt.KeepAspectRatio)
-        imageLabel.setPixmap(pixmap)
-        cartItemLayout.addWidget(imageLabel)
-
-        infoLayout = QVBoxLayout()
-
-        nameLabel = QLabel(item['name'])
-        nameLabel.setFont(QFont("Arial", 14, QFont.Bold))
-        infoLayout.addWidget(nameLabel)
-
-        priceLabel = QLabel(f"Цена: {item['price']} ₽")
-        infoLayout.addWidget(priceLabel)
-
-        quantityLabel = QLabel(f"Количество: {item['quantity']}")
-        infoLayout.addWidget(quantityLabel)
-
-        cartItemLayout.addLayout(infoLayout)
-
-        removeButton = QPushButton("Удалить")
-        removeButton.setStyleSheet("background-color: red; color: white; font: bold 14px;")
-        removeButton.clicked.connect(lambda: self.removeFromCart(item['id'], item['quantity']))
-        cartItemLayout.addWidget(removeButton)
-
-        cartItemWidget.setLayout(cartItemLayout)
-        cartItemWidget.setFixedSize(1100, 300)  # Устанавливаем фиксированный размер для панели товара
-        cartItemWidget.setStyleSheet("border: 1px solid #ccc; padding: 10px; margin: 5px;")
-        return cartItemWidget
-
-    def removeFromCart(self, itemId, quantity):
-        try:
-            DatabaseHelper.removeFromCart(self.teaShopApp.userId, itemId, quantity)
-            self.loadCartItems()  # Обновляем панель корзины после удаления
-        except Exception as e:
-            QMessageBox.warning(self, "Ошибка", f"Ошибка при удалении товара из корзины: {str(e)}")
 
     def calculateTotalPrice(self):
         totalPrice = 0

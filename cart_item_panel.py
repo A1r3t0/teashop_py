@@ -1,4 +1,4 @@
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QMessageBox
 from PySide6.QtCore import Qt
 from database_helper import DatabaseHelper
@@ -13,14 +13,19 @@ class CartItemPanel(QWidget):
     def initUI(self):
         layout = QHBoxLayout()
 
-        imageLabel = QLabel("Изображение чая")
-        imageLabel.setAlignment(Qt.AlignCenter)
+        imageLabel = QLabel()
+        image_path = self.cartItem.get('image_path')
+        if image_path and image_path.strip():  # Проверяем, что image_path существует и не пустой
+            pixmap = QPixmap(image_path).scaled(300, 300, Qt.KeepAspectRatio)
+        else:
+            pixmap = QPixmap('default_image.png').scaled(80, 80, Qt.KeepAspectRatio)  # Используем запасное изображение
+        imageLabel.setPixmap(pixmap)
         layout.addWidget(imageLabel)
 
         infoLayout = QVBoxLayout()
 
         nameLabel = QLabel(self.cartItem['name'])
-        nameLabel.setFont(QFont("Arial", 16, QFont.Bold))
+        nameLabel.setFont(QFont("Arial", 14, QFont.Bold))
         infoLayout.addWidget(nameLabel)
 
         priceLabel = QLabel(f"Цена: {self.cartItem['price']} ₽")
@@ -38,6 +43,8 @@ class CartItemPanel(QWidget):
         layout.addWidget(removeButton)
 
         self.setLayout(layout)
+        self.setFixedSize(1100, 300)  # Устанавливаем фиксированный размер для панели товара
+        self.setStyleSheet("border: 1px solid #ccc; padding: 10px; margin: 5px;")
 
     def removeFromCart(self):
         try:
