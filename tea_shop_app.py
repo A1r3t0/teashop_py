@@ -318,7 +318,7 @@ class TeaShopApp(QMainWindow):
             self.adminOrdersTable.setItem(row, 2, QTableWidgetItem(order['status']))
 
             statusComboBox = QComboBox()
-            statusComboBox.addItems(["В ожидании", "Подтверждено", "Отклонено"])
+            statusComboBox.addItems(["В ожидании", "Подтверждено", "Отклонено", "Доставлено", "В пути", "Отправлено"])
             statusComboBox.setCurrentText(order['status'])
             statusComboBox.currentTextChanged.connect(lambda text, orderId=order['id']: self.updateOrderStatus(orderId, text))
             self.adminOrdersTable.setCellWidget(row, 3, statusComboBox)
