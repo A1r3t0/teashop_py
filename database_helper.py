@@ -468,11 +468,11 @@ class DatabaseHelper:
         return result
 
     @staticmethod
-    def addTea(name, brandId, supplierId, price, stock):
-        query = "INSERT INTO teas (name, brand_id, supplier_id, price, stock) VALUES (%s, %s, %s, %s, %s)"
+    def addTea(name, brandId, supplierId, price, stock, imagePath):
+        query = "INSERT INTO teas (name, brand_id, supplier_id, price, stock, image_path) VALUES (%s, %s, %s, %s, %s, %s)"
         connection = DatabaseHelper.getConnection()
         cursor = connection.cursor()
-        cursor.execute(query, (name, brandId, supplierId, price, stock))
+        cursor.execute(query, (name, brandId, supplierId, price, stock, imagePath))
         connection.commit()
         cursor.close()
         connection.close()

@@ -270,7 +270,7 @@ class TeaShopApp(QMainWindow):
         supplierField = QComboBox()
         priceField = QLineEdit()
         stockField = QLineEdit()
-        statusLabel = QLabel()
+        imagePathField = QLineEdit()  # Поле для ввода пути к фотографии чая
 
         brands = DatabaseHelper.getAllBrands()
         suppliers = DatabaseHelper.getAllSuppliers()
@@ -286,28 +286,28 @@ class TeaShopApp(QMainWindow):
         addTeaLayout.addRow("Поставщик:", supplierField)
         addTeaLayout.addRow("Цена:", priceField)
         addTeaLayout.addRow("Количество:", stockField)
+        addTeaLayout.addRow("Путь к фотографии:", imagePathField)  # Добавляем поле для ввода пути к фотографии чая
 
         addButton = QPushButton("Добавить")
-        addButton.clicked.connect(lambda: self.addTea(nameField.text(), brandField.currentData(), supplierField.currentData(), priceField.text(), stockField.text(), statusLabel, addTeaDialog))
+        addButton.clicked.connect(
+            lambda: self.addTea(nameField.text(), brandField.currentData(), supplierField.currentData(),
+                                priceField.text(), stockField.text(), imagePathField.text(), addTeaDialog))
         addTeaLayout.addRow(addButton)
-
-        addTeaLayout.addRow(statusLabel)
 
         addTeaDialog.setLayout(addTeaLayout)
         addTeaDialog.exec()
 
-    def addTea(self, name, brandId, supplierId, price, stock, statusLabel, addTeaDialog):
+    def addTea(self, name, brandId, supplierId, price, stock, imagePath, addTeaDialog):
         try:
             price = float(price)
             stock = int(stock)
-            DatabaseHelper.addTea(name, brandId, supplierId, price, stock)
-            statusLabel.setText("Чай успешно добавлен.")
+            DatabaseHelper.addTea(name, brandId, supplierId, price, stock, imagePath)
             addTeaDialog.accept()
             self.loadTeas()  # Обновляем каталог чаев
         except ValueError:
-            statusLabel.setText("Неверные данные. Пожалуйста, проверьте введенные значения.")
+            QMessageBox.warning(self, "Ошибка", "Неверные данные. Пожалуйста, проверьте введенные значения.")
         except Exception as e:
-            statusLabel.setText(f"Ошибка при добавлении чая: {str(e)}")
+            QMessageBox.warning(self, "Ошибка", f"Ошибка при добавлении чая: {str(e)}")
 
     def loadAdminOrders(self):
         orders = DatabaseHelper.getAllOrders()
