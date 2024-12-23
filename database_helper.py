@@ -423,3 +423,35 @@ class DatabaseHelper:
         connection.commit()
         cursor.close()
         connection.close()
+
+    @staticmethod
+    def getAllBrands():
+        query = "SELECT id, name FROM brands"
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(query)
+        result = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return result
+
+    @staticmethod
+    def getAllSuppliers():
+        query = "SELECT id, contact_info FROM suppliers"
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(query)
+        result = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return result
+
+    @staticmethod
+    def addTea(name, brandId, supplierId, price, stock):
+        query = "INSERT INTO teas (name, brand_id, supplier_id, price, stock) VALUES (%s, %s, %s, %s, %s)"
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor()
+        cursor.execute(query, (name, brandId, supplierId, price, stock))
+        connection.commit()
+        cursor.close()
+        connection.close()

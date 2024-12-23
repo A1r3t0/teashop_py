@@ -23,8 +23,6 @@ class TeaShopApp(QMainWindow):
         self.userId = 0
         self.userRole = None
         self.allTeas = []
-        self.itemsPerPage = 9
-        self.currentPage = 1
 
         self.initUI()
 
@@ -255,8 +253,61 @@ class TeaShopApp(QMainWindow):
         self.adminOrdersTable.setHorizontalHeaderLabels(["ID", "Дата", "Статус", "Действие"])
         adminLayout.addWidget(self.adminOrdersTable)
 
+        addTeaButton = QPushButton("Добавить чай")
+        addTeaButton.clicked.connect(self.showAddTeaDialog)
+        adminLayout.addWidget(addTeaButton)
+
         adminPanel.setLayout(adminLayout)
         return adminPanel
+
+    def showAddTeaDialog(self):
+        addTeaDialog = QDialog(self)
+        addTeaDialog.setWindowTitle("Добавить чай")
+        addTeaLayout = QFormLayout()
+
+        nameField = QLineEdit()
+        brandField = QComboBox()
+        supplierField = QComboBox()
+        priceField = QLineEdit()
+        stockField = QLineEdit()
+        statusLabel = QLabel()
+
+        brands = DatabaseHelper.getAllBrands()
+        suppliers = DatabaseHelper.getAllSuppliers()
+
+        for brand in brands:
+            brandField.addItem(brand['name'], brand['id'])
+
+        for supplier in suppliers:
+            supplierField.addItem(supplier['contact_info'], supplier['id'])
+
+        addTeaLayout.addRow("Название:", nameField)
+        addTeaLayout.addRow("Бренд:", brandField)
+        addTeaLayout.addRow("Поставщик:", supplierField)
+        addTeaLayout.addRow("Цена:", priceField)
+        addTeaLayout.addRow("Количество:", stockField)
+
+        addButton = QPushButton("Добавить")
+        addButton.clicked.connect(lambda: self.addTea(nameField.text(), brandField.currentData(), supplierField.currentData(), priceField.text(), stockField.text(), statusLabel, addTeaDialog))
+        addTeaLayout.addRow(addButton)
+
+        addTeaLayout.addRow(statusLabel)
+
+        addTeaDialog.setLayout(addTeaLayout)
+        addTeaDialog.exec()
+
+    def addTea(self, name, brandId, supplierId, price, stock, statusLabel, addTeaDialog):
+        try:
+            price = float(price)
+            stock = int(stock)
+            DatabaseHelper.addTea(name, brandId, supplierId, price, stock)
+            statusLabel.setText("Чай успешно добавлен.")
+            addTeaDialog.accept()
+            self.loadTeas()  # Обновляем каталог чаев
+        except ValueError:
+            statusLabel.setText("Неверные данные. Пожалуйста, проверьте введенные значения.")
+        except Exception as e:
+            statusLabel.setText(f"Ошибка при добавлении чая: {str(e)}")
 
     def loadAdminOrders(self):
         orders = DatabaseHelper.getAllOrders()
@@ -291,51 +342,30 @@ class TeaShopApp(QMainWindow):
         scrollContent.setLayout(self.teaGrid)
         scrollArea.setWidget(scrollContent)
 
-        paginationPanel = QWidget()
-        paginationLayout = QHBoxLayout()
-
-        prevButton = QPushButton("Предыдущая")
-        prevButton.clicked.connect(self.prevPage)
-        nextButton = QPushButton("Следующая")
-        nextButton.clicked.connect(self.nextPage)
-
-        paginationLayout.addWidget(prevButton)
-        paginationLayout.addWidget(nextButton)
-        paginationPanel.setLayout(paginationLayout)
-
         catalogLayout.addWidget(scrollArea)
-        catalogLayout.addWidget(paginationPanel)
         catalogPanel.setLayout(catalogLayout)
         return catalogPanel
 
     def loadTeas(self):
         self.allTeas = DatabaseHelper.getAllTeas(self.userRole)
-        self.displayPage()
+        self.displayTeas()
 
-    def displayPage(self):
-        startIndex = (self.currentPage - 1) * self.itemsPerPage
-        endIndex = min(startIndex + self.itemsPerPage, len(self.allTeas))
+    def displayTeas(self):
+        # Очищаем текущие виджеты
+        while self.teaGrid.count():
+            item = self.teaGrid.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
 
-        for i in range(self.teaGrid.count()):
-            self.teaGrid.itemAt(i).widget().setParent(None)
-
-        for i in range(startIndex, endIndex):
-            tea = self.allTeas[i]
+        row = 0
+        col = 0
+        for i, tea in enumerate(self.allTeas):
             teaPanel = TeaPanel(tea, self)
-            self.teaGrid.addWidget(teaPanel, (i - startIndex) // 3, (i - startIndex) % 3)
-
-    def prevPage(self):
-        if self.currentPage > 1:
-            self.currentPage -= 1
-            self.displayPage()
-
-    def nextPage(self):
-        if self.currentPage < self.getTotalPages():
-            self.currentPage += 1
-            self.displayPage()
-
-    def getTotalPages(self):
-        return (len(self.allTeas) + self.itemsPerPage - 1) // self.itemsPerPage
+            self.teaGrid.addWidget(teaPanel, row, col)
+            col += 1
+            if col == 3:
+                col = 0
+                row += 1
 
     def onTabChanged(self, index):
         if index == self.tabWidget.indexOf(self.cartPanel) or index == self.tabWidget.indexOf(self.ordersPanel):
