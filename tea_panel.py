@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout
 from PySide6.QtGui import QPixmap, QFont
 from PySide6.QtCore import Qt
-
 from tea_detail_dialog import TeaDetailDialog
 
 class TeaPanel(QWidget):
@@ -29,14 +28,24 @@ class TeaPanel(QWidget):
         priceLabel.setFont(QFont("Arial", 14, QFont.Bold))
         layout.addWidget(priceLabel)
 
-        buyButton = QPushButton("Купить")
-        buyButton.setStyleSheet("background-color: #66CC33; color: white; font: bold 14px;")
-        buyButton.clicked.connect(self.showTeaDetail)
-        layout.addWidget(buyButton)
+        if self.teaShopApp.userRole == "admin":
+            orderButton = QPushButton("Заказать")
+            orderButton.setStyleSheet("background-color: #66CC33; color: white; font: bold 14px;")
+            orderButton.clicked.connect(self.showOrderTeaDialog)
+            layout.addWidget(orderButton)
+        else:
+            buyButton = QPushButton("Купить")
+            buyButton.setStyleSheet("background-color: #66CC33; color: white; font: bold 14px;")
+            buyButton.clicked.connect(self.showTeaDetail)
+            layout.addWidget(buyButton)
 
         self.setLayout(layout)
         self.setFixedSize(220, 300)  # Устанавливаем фиксированный размер для панели чая
 
     def showTeaDetail(self):
+        dialog = TeaDetailDialog(self.tea, self.teaShopApp)
+        dialog.exec()
+
+    def showOrderTeaDialog(self):
         dialog = TeaDetailDialog(self.tea, self.teaShopApp)
         dialog.exec()

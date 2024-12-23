@@ -229,20 +229,25 @@ class TeaShopApp(QMainWindow):
         ordersLayout = QVBoxLayout()
 
         self.ordersTable = QTableWidget()
-        self.ordersTable.setColumnCount(3)
-        self.ordersTable.setHorizontalHeaderLabels(["ID", "Дата", "Статус"])
+        self.ordersTable.setColumnCount(4)
+        self.ordersTable.setHorizontalHeaderLabels(["ID", "ID заказа", "ID чая", "Количество"])
         ordersLayout.addWidget(self.ordersTable)
 
         ordersPanel.setLayout(ordersLayout)
         return ordersPanel
 
     def loadUserOrders(self):
-        orders = DatabaseHelper.getUserOrders(self.userId)
+        if self.userRole == "admin":
+            orders = DatabaseHelper.getAdminOrders(self.userId)
+        else:
+            orders = DatabaseHelper.getUserOrders(self.userId)
+
         self.ordersTable.setRowCount(len(orders))
         for row, order in enumerate(orders):
             self.ordersTable.setItem(row, 0, QTableWidgetItem(str(order['id'])))
-            self.ordersTable.setItem(row, 1, QTableWidgetItem(order['order_date'].strftime("%Y-%m-%d %H:%M:%S")))
-            self.ordersTable.setItem(row, 2, QTableWidgetItem(order['status']))
+            self.ordersTable.setItem(row, 1, QTableWidgetItem(str(order['admin_order_id'])))
+            self.ordersTable.setItem(row, 2, QTableWidgetItem(str(order['tea_id'])))
+            self.ordersTable.setItem(row, 3, QTableWidgetItem(str(order['quantity'])))
 
     def createAdminPanel(self):
         adminPanel = QWidget()

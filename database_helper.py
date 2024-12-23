@@ -55,9 +55,10 @@ class DatabaseHelper:
 
     @staticmethod
     def getAllTeas(role):
-        query = "SELECT * FROM teas WHERE stock > 0"
         if role == "admin":
             query = "SELECT * FROM teas"
+        else:
+            query = "SELECT * FROM teas WHERE stock > 0"
         connection = DatabaseHelper.getConnection()
         cursor = connection.cursor(dictionary=True)
         cursor.execute(query)
@@ -476,3 +477,34 @@ class DatabaseHelper:
         connection.commit()
         cursor.close()
         connection.close()
+
+    @staticmethod
+    def addToAdminOrder(adminId, teaId, quantity):
+        adminOrderId = DatabaseHelper.getAdminOrderIdByAdminId(adminId)
+        if adminOrderId == -1:
+            DatabaseHelper.createAdminOrderForAdmin(adminId)
+            adminOrderId = DatabaseHelper.getAdminOrderIdByAdminId(adminId)
+
+        query = "INSERT INTO admin_order_tea (admin_order_id, tea_id, quantity) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE quantity = quantity + %s"
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor()
+        cursor.execute(query, (adminOrderId, teaId, quantity, quantity))
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+    @staticmethod
+    def getAdminOrders(adminId):
+        query = """
+        SELECT aot.id, aot.admin_order_id, aot.tea_id, aot.quantity
+        FROM admin_order_tea aot
+        JOIN admin_orders ao ON aot.admin_order_id = ao.id
+        WHERE ao.admin_id = %s
+        """
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(query, (adminId,))
+        result = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return result

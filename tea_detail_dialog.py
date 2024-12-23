@@ -54,10 +54,15 @@ class TeaDetailDialog(QDialog):
         self.quantityComboBox.currentIndexChanged.connect(self.updatePrice)  # Добавляем обработчик события изменения выбранного количества
         layout.addWidget(self.quantityComboBox)
 
-        buyButton = QPushButton("Купить")
-        buyButton.setStyleSheet("background-color: #66CC33; color: black; font: bold 14px;")
-        buyButton.clicked.connect(self.buyTea)
-        layout.addWidget(buyButton)
+        if self.teaShopApp.userRole == "admin":
+            orderButton = QPushButton("Заказать")
+            orderButton.setStyleSheet("background-color: #66CC33; color: black; font: bold 14px;")
+            orderButton.clicked.connect(self.orderTea)
+        else:
+            buyButton = QPushButton("Купить")
+            buyButton.setStyleSheet("background-color: #66CC33; color: black; font: bold 14px;")
+            buyButton.clicked.connect(self.buyTea)
+        layout.addWidget(orderButton if self.teaShopApp.userRole == "admin" else buyButton)
 
         self.setLayout(layout)
 
@@ -95,11 +100,14 @@ class TeaDetailDialog(QDialog):
         supplierDetailDialog.exec()
 
     def generateQuantityOptions(self, stock):
-        availableQuantities = [5, 25, 50, 100]
-        quantities = [str(q) + " г" for q in availableQuantities if q <= stock]
-        if stock not in availableQuantities:
-            quantities.append(str(stock) + " г")
-        return quantities
+        if self.teaShopApp.userRole == "admin":
+            return ["100 г", "250 г", "500 г", "750 г", "1000 г"]
+        else:
+            availableQuantities = [5, 25, 50, 100]
+            quantities = [str(q) + " г" for q in availableQuantities if q <= stock]
+            if stock not in availableQuantities:
+                quantities.append(str(stock) + " г")
+            return quantities
 
     def updatePrice(self, index):
         selectedQuantity = self.quantityComboBox.currentText()
@@ -121,3 +129,10 @@ class TeaDetailDialog(QDialog):
                 self.accept()
             else:
                 QMessageBox.warning(self, "Ошибка", "Недостаточно чая на складе.")
+
+    def orderTea(self):
+        selectedQuantity = self.quantityComboBox.currentText()
+        quantityInGrams = int(selectedQuantity.replace(" г", ""))
+        DatabaseHelper.addToAdminOrder(self.teaShopApp.userId, self.tea['id'], quantityInGrams)
+        QMessageBox.information(self, "Успех", "Чай добавлен в заказ администратора.")
+        self.accept()
