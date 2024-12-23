@@ -112,8 +112,7 @@ class CartPanel(QWidget):
             DatabaseHelper.confirmOrder(self.teaShopApp.userId, self.teaShopApp.userRole)
             # Очищаем корзину
             DatabaseHelper.clearCart(self.teaShopApp.userId, self.teaShopApp.userRole)
-            self.loadCartItems()
+            self.loadCartItems()  # Обновляем панель корзины после очистки
             QMessageBox.information(self, "Оформление заказа", "Заказ успешно оформлен.")
         except Exception as e:
             QMessageBox.warning(self, "Ошибка", f"Ошибка при оформлении заказа: {str(e)}")
-

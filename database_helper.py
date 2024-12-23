@@ -343,22 +343,6 @@ class DatabaseHelper:
                     query = "INSERT INTO orders (user_id, status) VALUES (%s, 'В ожидании')"
                     cursor.execute(query, (userId,))
                     connection.commit()
-                    newOrderId = cursor.lastrowid
-
-                    # Переносим товары из текущего заказа в новый заказ
-                    query = """
-                        INSERT INTO order_tea (order_id, tea_id, quantity)
-                        SELECT %s, tea_id, quantity
-                        FROM order_tea
-                        WHERE order_id = %s
-                        """
-                    cursor.execute(query, (newOrderId, currentOrderId))
-                    connection.commit()
-
-                    # Очищаем текущий заказ
-                    query = "DELETE FROM order_tea WHERE order_id = %s"
-                    cursor.execute(query, (currentOrderId,))
-                    connection.commit()
                 else:
                     raise ValueError("Текущий заказ не найден")
 
@@ -380,22 +364,6 @@ class DatabaseHelper:
                     query = "INSERT INTO admin_orders (admin_id, status) VALUES (%s, 'В ожидании')"
                     cursor.execute(query, (userId,))
                     connection.commit()
-                    newOrderId = cursor.lastrowid
-
-                    # Переносим товары из текущего заказа в новый заказ
-                    query = """
-                        INSERT INTO admin_order_tea (admin_order_id, tea_id, quantity)
-                        SELECT %s, tea_id, quantity
-                        FROM admin_order_tea
-                        WHERE admin_order_id = %s
-                        """
-                    cursor.execute(query, (newOrderId, currentOrderId))
-                    connection.commit()
-
-                    # Очищаем текущий заказ
-                    query = "DELETE FROM admin_order_tea WHERE admin_order_id = %s"
-                    cursor.execute(query, (currentOrderId,))
-                    connection.commit()
                 else:
                     raise ValueError("Текущий заказ не найден")
 
@@ -415,14 +383,24 @@ class DatabaseHelper:
 
         try:
             if role == "customer":
-                # Очищаем текущий заказ
-                query = "DELETE FROM order_tea WHERE order_id = (SELECT id FROM orders WHERE user_id = %s AND status = 'В ожидании' LIMIT 1)"
+                # Удаляем все записи из order_tea для текущего пользователя
+                query = "DELETE FROM order_tea WHERE order_id = (SELECT id FROM orders WHERE user_id = %s AND status = 'Подтверждено' LIMIT 1)"
+                cursor.execute(query, (userId,))
+                connection.commit()
+
+                # Создаем новый заказ со статусом "В ожидании"
+                query = "INSERT INTO orders (user_id, status) VALUES (%s, 'В ожидании')"
                 cursor.execute(query, (userId,))
                 connection.commit()
 
             elif role == "admin":
-                # Очищаем текущий заказ
+                # Удаляем все записи из admin_order_tea для текущего администратора
                 query = "DELETE FROM admin_order_tea WHERE admin_order_id = (SELECT id FROM admin_orders WHERE admin_id = %s AND status = 'В ожидании' LIMIT 1)"
+                cursor.execute(query, (userId,))
+                connection.commit()
+
+                # Создаем новый заказ со статусом "В ожидании"
+                query = "INSERT INTO admin_orders (admin_id, status) VALUES (%s, 'В ожидании')"
                 cursor.execute(query, (userId,))
                 connection.commit()
 

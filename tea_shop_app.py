@@ -221,33 +221,18 @@ class TeaShopApp(QMainWindow):
         self.ordersTable = QTableWidget()
         self.ordersTable.setColumnCount(3)
         self.ordersTable.setHorizontalHeaderLabels(["ID", "Дата", "Статус"])
-        self.ordersTable.cellClicked.connect(self.showOrderDetails)
         ordersLayout.addWidget(self.ordersTable)
-
-        self.orderDetailsTable = QTableWidget()
-        self.orderDetailsTable.setColumnCount(3)
-        self.orderDetailsTable.setHorizontalHeaderLabels(["Название чая", "Количество", "Цена"])
-        ordersLayout.addWidget(self.orderDetailsTable)
 
         ordersPanel.setLayout(ordersLayout)
         return ordersPanel
 
-    def showOrderDetails(self, row, column):
-        orderId = self.ordersTable.item(row, 0).text()
-        orderDetails = DatabaseHelper.getOrderDetails(orderId)
-        self.orderDetailsTable.setRowCount(len(orderDetails))
-        for row, detail in enumerate(orderDetails):
-            self.orderDetailsTable.setItem(row, 0, QTableWidgetItem(detail['name']))
-            self.orderDetailsTable.setItem(row, 1, QTableWidgetItem(str(detail['quantity'])))
-            self.orderDetailsTable.setItem(row, 2, QTableWidgetItem(str(detail['price'])))
-
-    # def loadUserOrders(self):
-    #     orders = DatabaseHelper.getUserOrders(self.userId)
-    #     self.ordersTable.setRowCount(len(orders))
-    #     for row, order in enumerate(orders):
-    #         self.ordersTable.setItem(row, 0, QTableWidgetItem(str(order['id'])))
-    #         self.ordersTable.setItem(row, 1, QTableWidgetItem(order['order_date'].strftime("%Y-%m-%d %H:%M:%S")))
-    #         self.ordersTable.setItem(row, 2, QTableWidgetItem(order['status']))
+    def loadUserOrders(self):
+        orders = DatabaseHelper.getUserOrders(self.userId)
+        self.ordersTable.setRowCount(len(orders))
+        for row, order in enumerate(orders):
+            self.ordersTable.setItem(row, 0, QTableWidgetItem(str(order['id'])))
+            self.ordersTable.setItem(row, 1, QTableWidgetItem(order['order_date'].strftime("%Y-%m-%d %H:%M:%S")))
+            self.ordersTable.setItem(row, 2, QTableWidgetItem(order['status']))
 
     def createCatalogPanel(self):
         catalogPanel = QWidget()
@@ -315,22 +300,6 @@ class TeaShopApp(QMainWindow):
             self.cartPanel.loadCartItems()
         elif index == self.tabWidget.indexOf(self.ordersPanel):
             self.loadUserOrders()
-
-    def loadUserOrders(self):
-        orders = DatabaseHelper.getUserOrders(self.userId)
-        self.ordersTable.setRowCount(len(orders))
-        for row, order in enumerate(orders):
-            self.ordersTable.setItem(row, 0, QTableWidgetItem(str(order['id'])))
-            self.ordersTable.setItem(row, 1, QTableWidgetItem(order['order_date'].strftime("%Y-%m-%d %H:%M:%S")))
-            self.ordersTable.setItem(row, 2, QTableWidgetItem(order['status']))
-
-            # Load order details
-            orderDetails = DatabaseHelper.getOrderDetails(order['id'])
-            self.orderDetailsTable.setRowCount(len(orderDetails))
-            for detailRow, detail in enumerate(orderDetails):
-                self.orderDetailsTable.setItem(detailRow, 0, QTableWidgetItem(detail['name']))
-                self.orderDetailsTable.setItem(detailRow, 1, QTableWidgetItem(str(detail['quantity'])))
-                self.orderDetailsTable.setItem(detailRow, 2, QTableWidgetItem(str(detail['price'])))
 
 
 if __name__ == "__main__":
