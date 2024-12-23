@@ -281,3 +281,156 @@ class DatabaseHelper:
         connection.commit()
         cursor.close()
         connection.close()
+
+    @staticmethod
+    def getUserOrders(userId):
+        query = "SELECT id, order_date, status FROM orders WHERE user_id = %s AND status = 'Подтверждено'"
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(query, (userId,))
+        result = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return result
+
+    def getUserOrders(userId):
+        query = "SELECT id, order_date, status FROM orders WHERE user_id = %s AND status = 'Подтверждено'"
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(query, (userId,))
+        result = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return result
+
+    @staticmethod
+    def getOrderDetails(orderId):
+        query = """
+        SELECT t.name, ot.quantity, t.price
+        FROM order_tea ot
+        JOIN teas t ON ot.tea_id = t.id
+        WHERE ot.order_id = %s
+        """
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(query, (orderId,))
+        result = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return result
+
+    @staticmethod
+    def confirmOrder(userId, role):
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor()
+
+        try:
+            if role == "customer":
+                # Получаем текущий заказ
+                currentOrderIdQuery = "SELECT id FROM orders WHERE user_id = %s AND status = 'В ожидании' LIMIT 1"
+                cursor.execute(currentOrderIdQuery, (userId,))
+                currentOrderId = cursor.fetchone()
+
+                if currentOrderId:
+                    currentOrderId = currentOrderId[0]
+
+                    # Обновляем статус текущего заказа на "Подтверждено"
+                    query = "UPDATE orders SET status = 'Подтверждено' WHERE id = %s"
+                    cursor.execute(query, (currentOrderId,))
+                    connection.commit()
+
+                    # Создаем новый заказ со статусом "В ожидании"
+                    query = "INSERT INTO orders (user_id, status) VALUES (%s, 'В ожидании')"
+                    cursor.execute(query, (userId,))
+                    connection.commit()
+                    newOrderId = cursor.lastrowid
+
+                    # Переносим товары из текущего заказа в новый заказ
+                    query = """
+                        INSERT INTO order_tea (order_id, tea_id, quantity)
+                        SELECT %s, tea_id, quantity
+                        FROM order_tea
+                        WHERE order_id = %s
+                        """
+                    cursor.execute(query, (newOrderId, currentOrderId))
+                    connection.commit()
+
+                    # Очищаем текущий заказ
+                    query = "DELETE FROM order_tea WHERE order_id = %s"
+                    cursor.execute(query, (currentOrderId,))
+                    connection.commit()
+                else:
+                    raise ValueError("Текущий заказ не найден")
+
+            elif role == "admin":
+                # Получаем текущий заказ
+                currentOrderIdQuery = "SELECT id FROM admin_orders WHERE admin_id = %s AND status = 'В ожидании' LIMIT 1"
+                cursor.execute(currentOrderIdQuery, (userId,))
+                currentOrderId = cursor.fetchone()
+
+                if currentOrderId:
+                    currentOrderId = currentOrderId[0]
+
+                    # Обновляем статус текущего заказа на "Подтверждено"
+                    query = "UPDATE admin_orders SET status = 'Подтверждено' WHERE id = %s"
+                    cursor.execute(query, (currentOrderId,))
+                    connection.commit()
+
+                    # Создаем новый заказ со статусом "В ожидании"
+                    query = "INSERT INTO admin_orders (admin_id, status) VALUES (%s, 'В ожидании')"
+                    cursor.execute(query, (userId,))
+                    connection.commit()
+                    newOrderId = cursor.lastrowid
+
+                    # Переносим товары из текущего заказа в новый заказ
+                    query = """
+                        INSERT INTO admin_order_tea (admin_order_id, tea_id, quantity)
+                        SELECT %s, tea_id, quantity
+                        FROM admin_order_tea
+                        WHERE admin_order_id = %s
+                        """
+                    cursor.execute(query, (newOrderId, currentOrderId))
+                    connection.commit()
+
+                    # Очищаем текущий заказ
+                    query = "DELETE FROM admin_order_tea WHERE admin_order_id = %s"
+                    cursor.execute(query, (currentOrderId,))
+                    connection.commit()
+                else:
+                    raise ValueError("Текущий заказ не найден")
+
+        except Exception as e:
+            print(f"Ошибка при подтверждении заказа: {e}")
+            connection.rollback()
+            raise
+
+        finally:
+            cursor.close()
+            connection.close()
+
+    @staticmethod
+    def clearCart(userId, role):
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor()
+
+        try:
+            if role == "customer":
+                # Очищаем текущий заказ
+                query = "DELETE FROM order_tea WHERE order_id = (SELECT id FROM orders WHERE user_id = %s AND status = 'В ожидании' LIMIT 1)"
+                cursor.execute(query, (userId,))
+                connection.commit()
+
+            elif role == "admin":
+                # Очищаем текущий заказ
+                query = "DELETE FROM admin_order_tea WHERE admin_order_id = (SELECT id FROM admin_orders WHERE admin_id = %s AND status = 'В ожидании' LIMIT 1)"
+                cursor.execute(query, (userId,))
+                connection.commit()
+
+        except Exception as e:
+            print(f"Ошибка при очистке корзины: {e}")
+            connection.rollback()
+            raise
+
+        finally:
+            cursor.close()
+            connection.close()

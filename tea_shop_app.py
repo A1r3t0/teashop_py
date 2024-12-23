@@ -32,9 +32,11 @@ class TeaShopApp(QMainWindow):
         self.profilePanel = self.createProfilePanel()
         self.catalogPanel = self.createCatalogPanel()
         self.cartPanel = CartPanel(self)  # Используем новый класс CartPanel
+        self.ordersPanel = self.createOrdersPanel()  # Создаем панель заказов
 
         self.tabWidget.addTab(self.catalogPanel, "Каталог чаев")
         self.tabWidget.addTab(self.cartPanel, "Корзина")
+        self.tabWidget.addTab(self.ordersPanel, "Мои заказы")  # Добавляем новую вкладку
 
         self.tabWidget.currentChanged.connect(self.onTabChanged)
 
@@ -177,19 +179,20 @@ class TeaShopApp(QMainWindow):
 
     def createProfilePanel(self):
         profilePanel = QWidget()
-        profileLayout = QFormLayout()
+        profileLayout = QVBoxLayout()
 
         self.profileEmailField = QLineEdit()
         self.profileFullNameField = QLineEdit()
         self.profilePhoneField = QLineEdit()
 
-        profileLayout.addRow("Email:", self.profileEmailField)
-        profileLayout.addRow("Имя:", self.profileFullNameField)
-        profileLayout.addRow("Телефон:", self.profilePhoneField)
+        profileLayout.addWidget(QLabel("Профиль пользователя"))
+        profileLayout.addWidget(self.profileEmailField)
+        profileLayout.addWidget(self.profileFullNameField)
+        profileLayout.addWidget(self.profilePhoneField)
 
         saveButton = QPushButton("Обновить профиль")
         saveButton.clicked.connect(self.updateUserProfile)
-        profileLayout.addRow(saveButton)
+        profileLayout.addWidget(saveButton)
 
         profilePanel.setLayout(profileLayout)
         return profilePanel
@@ -210,6 +213,41 @@ class TeaShopApp(QMainWindow):
             self.profileEmailField.setText(user['email'])
             self.profileFullNameField.setText(user['full_name'])
             self.profilePhoneField.setText(user['phone'])
+
+    def createOrdersPanel(self):
+        ordersPanel = QWidget()
+        ordersLayout = QVBoxLayout()
+
+        self.ordersTable = QTableWidget()
+        self.ordersTable.setColumnCount(3)
+        self.ordersTable.setHorizontalHeaderLabels(["ID", "Дата", "Статус"])
+        self.ordersTable.cellClicked.connect(self.showOrderDetails)
+        ordersLayout.addWidget(self.ordersTable)
+
+        self.orderDetailsTable = QTableWidget()
+        self.orderDetailsTable.setColumnCount(3)
+        self.orderDetailsTable.setHorizontalHeaderLabels(["Название чая", "Количество", "Цена"])
+        ordersLayout.addWidget(self.orderDetailsTable)
+
+        ordersPanel.setLayout(ordersLayout)
+        return ordersPanel
+
+    def showOrderDetails(self, row, column):
+        orderId = self.ordersTable.item(row, 0).text()
+        orderDetails = DatabaseHelper.getOrderDetails(orderId)
+        self.orderDetailsTable.setRowCount(len(orderDetails))
+        for row, detail in enumerate(orderDetails):
+            self.orderDetailsTable.setItem(row, 0, QTableWidgetItem(detail['name']))
+            self.orderDetailsTable.setItem(row, 1, QTableWidgetItem(str(detail['quantity'])))
+            self.orderDetailsTable.setItem(row, 2, QTableWidgetItem(str(detail['price'])))
+
+    # def loadUserOrders(self):
+    #     orders = DatabaseHelper.getUserOrders(self.userId)
+    #     self.ordersTable.setRowCount(len(orders))
+    #     for row, order in enumerate(orders):
+    #         self.ordersTable.setItem(row, 0, QTableWidgetItem(str(order['id'])))
+    #         self.ordersTable.setItem(row, 1, QTableWidgetItem(order['order_date'].strftime("%Y-%m-%d %H:%M:%S")))
+    #         self.ordersTable.setItem(row, 2, QTableWidgetItem(order['status']))
 
     def createCatalogPanel(self):
         catalogPanel = QWidget()
@@ -275,6 +313,25 @@ class TeaShopApp(QMainWindow):
     def onTabChanged(self, index):
         if index == self.tabWidget.indexOf(self.cartPanel):
             self.cartPanel.loadCartItems()
+        elif index == self.tabWidget.indexOf(self.ordersPanel):
+            self.loadUserOrders()
+
+    def loadUserOrders(self):
+        orders = DatabaseHelper.getUserOrders(self.userId)
+        self.ordersTable.setRowCount(len(orders))
+        for row, order in enumerate(orders):
+            self.ordersTable.setItem(row, 0, QTableWidgetItem(str(order['id'])))
+            self.ordersTable.setItem(row, 1, QTableWidgetItem(order['order_date'].strftime("%Y-%m-%d %H:%M:%S")))
+            self.ordersTable.setItem(row, 2, QTableWidgetItem(order['status']))
+
+            # Load order details
+            orderDetails = DatabaseHelper.getOrderDetails(order['id'])
+            self.orderDetailsTable.setRowCount(len(orderDetails))
+            for detailRow, detail in enumerate(orderDetails):
+                self.orderDetailsTable.setItem(detailRow, 0, QTableWidgetItem(detail['name']))
+                self.orderDetailsTable.setItem(detailRow, 1, QTableWidgetItem(str(detail['quantity'])))
+                self.orderDetailsTable.setItem(detailRow, 2, QTableWidgetItem(str(detail['price'])))
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

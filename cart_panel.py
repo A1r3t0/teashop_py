@@ -107,4 +107,13 @@ class CartPanel(QWidget):
         self.totalPriceLabel.setText(f"{totalPrice:.2f} ₽")
 
     def checkout(self):
-        QMessageBox.information(self, "Оформление заказа", "Функциональность оформления заказа будет добавлена позже.")
+        try:
+            # Подтверждаем заказ
+            DatabaseHelper.confirmOrder(self.teaShopApp.userId, self.teaShopApp.userRole)
+            # Очищаем корзину
+            DatabaseHelper.clearCart(self.teaShopApp.userId, self.teaShopApp.userRole)
+            self.loadCartItems()
+            QMessageBox.information(self, "Оформление заказа", "Заказ успешно оформлен.")
+        except Exception as e:
+            QMessageBox.warning(self, "Ошибка", f"Ошибка при оформлении заказа: {str(e)}")
+
