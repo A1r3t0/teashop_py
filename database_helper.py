@@ -67,6 +67,17 @@ class DatabaseHelper:
         return result
 
     @staticmethod
+    def getTeaById(teaId):
+        query = "SELECT * FROM teas WHERE id = %s"
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(query, (teaId,))
+        result = cursor.fetchone()
+        cursor.close()
+        connection.close()
+        return result
+
+    @staticmethod
     def getCartItemsByUserId(userId, role):
         if role == "customer":
             query = "SELECT t.id, t.name, c.quantity, t.price FROM order_tea c JOIN teas t ON c.tea_id = t.id WHERE c.order_id = (SELECT id FROM orders WHERE user_id = %s LIMIT 1)"

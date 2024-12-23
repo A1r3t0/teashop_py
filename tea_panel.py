@@ -4,7 +4,6 @@ from PySide6.QtCore import Qt
 
 from tea_detail_dialog import TeaDetailDialog
 
-
 class TeaPanel(QWidget):
     def __init__(self, tea, teaShopApp):
         super().__init__()
@@ -21,7 +20,8 @@ class TeaPanel(QWidget):
         layout.addWidget(nameLabel)
 
         imageLabel = QLabel()
-        pixmap = QPixmap(f"{self.tea['name']}.png").scaled(200, 200, Qt.KeepAspectRatio)
+        image_path = self.tea.get('image_path', 'default_image.png')  # Используем запасное изображение, если image_path не установлен
+        pixmap = QPixmap(image_path).scaled(200, 200, Qt.KeepAspectRatio)
         imageLabel.setPixmap(pixmap)
         imageLabel.setAlignment(Qt.AlignCenter)
         layout.addWidget(imageLabel)

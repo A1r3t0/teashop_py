@@ -18,7 +18,8 @@ class TeaDetailDialog(QDialog):
         layout = QVBoxLayout()
 
         imageLabel = QLabel()
-        pixmap = QPixmap(f"{self.tea['name']}.png").scaled(200, 200, Qt.KeepAspectRatio)
+        image_path = self.tea.get('image_path', 'default_image.png')  # Используем запасное изображение, если image_path не установлен
+        pixmap = QPixmap(image_path).scaled(200, 200, Qt.KeepAspectRatio)
         imageLabel.setPixmap(pixmap)
         layout.addWidget(imageLabel)
 
