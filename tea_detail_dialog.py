@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QComboB
 from PySide6.QtGui import QPixmap, QFont
 from PySide6.QtCore import Qt
 from database_helper import DatabaseHelper
+from brand_detail_panel import BrandDetailPanel  # Импортируем новый класс BrandDetailPanel
 
 class TeaDetailDialog(QDialog):
     def __init__(self, tea, teaShopApp):
@@ -28,14 +29,20 @@ class TeaDetailDialog(QDialog):
         brand = DatabaseHelper.getBrandById(self.tea['brand_id'])
         supplier = DatabaseHelper.getSupplierById(self.tea['supplier_id'])
 
+        # Создаем QLabel для бренда с кастомным стилем
         brandLabel = QLabel(f"Бренд: {brand['name']}")
+        brandLabel.setStyleSheet("color: blue;")
+        brandLabel.mousePressEvent = lambda event: self.showBrandDetail(brand)  # Добавляем обработчик события клика
         layout.addWidget(brandLabel)
 
-        supplierLabel = QLabel(f"Поставщик: {supplier['contact_info']}")
+        # Создаем QLabel для поставщика с кастомным стилем
+        supplierLabel = QLabel(f"Поставщик: {supplier['name']}")
+        supplierLabel.setStyleSheet("color: blue;")
+        supplierLabel.mousePressEvent = lambda event: self.showSupplierDetail(supplier)  # Добавляем обработчик события клика
         layout.addWidget(supplierLabel)
 
-        priceLabel = QLabel(f"Цена: {self.tea['price']} ₽")
-        layout.addWidget(priceLabel)
+        self.priceLabel = QLabel(f"Цена: {self.tea['price']} ₽")
+        layout.addWidget(self.priceLabel)
 
         quantityLabel = QLabel("Количество:")
         layout.addWidget(quantityLabel)
@@ -43,6 +50,7 @@ class TeaDetailDialog(QDialog):
         self.quantityComboBox = QComboBox()
         quantities = self.generateQuantityOptions(self.tea['stock'])
         self.quantityComboBox.addItems(quantities)
+        self.quantityComboBox.currentIndexChanged.connect(self.updatePrice)  # Добавляем обработчик события изменения выбранного количества
         layout.addWidget(self.quantityComboBox)
 
         buyButton = QPushButton("Купить")
@@ -52,12 +60,51 @@ class TeaDetailDialog(QDialog):
 
         self.setLayout(layout)
 
+    def showBrandDetail(self, brand):
+        brandDetailDialog = QDialog(self)
+        brandDetailDialog.setWindowTitle("Информация о бренде")
+        brandDetailDialog.setGeometry(300, 200, 400, 300)
+
+        brandDetailPanel = BrandDetailPanel(brand)
+        brandDetailLayout = QVBoxLayout()
+        brandDetailLayout.addWidget(brandDetailPanel)
+
+        brandDetailDialog.setLayout(brandDetailLayout)
+        brandDetailDialog.exec()
+
+    def showSupplierDetail(self, supplier):
+        supplierDetailDialog = QDialog(self)
+        supplierDetailDialog.setWindowTitle("Информация о поставщике")
+        supplierDetailDialog.setGeometry(300, 200, 400, 300)
+
+        supplierDetailLayout = QVBoxLayout()
+
+        nameLabel = QLabel(supplier['name'])
+        nameLabel.setFont(QFont("Arial", 24, QFont.Bold))
+        nameLabel.setAlignment(Qt.AlignCenter)
+        supplierDetailLayout.addWidget(nameLabel)
+
+        contactInfoLabel = QLabel(f"Контактная информация: {supplier['contact_info']}")
+        supplierDetailLayout.addWidget(contactInfoLabel)
+
+        createdYearLabel = QLabel(f"Год создания: {supplier['created_year']}")
+        supplierDetailLayout.addWidget(createdYearLabel)
+
+        supplierDetailDialog.setLayout(supplierDetailLayout)
+        supplierDetailDialog.exec()
+
     def generateQuantityOptions(self, stock):
         availableQuantities = [5, 25, 50, 100]
         quantities = [str(q) + " г" for q in availableQuantities if q <= stock]
         if stock not in availableQuantities:
             quantities.append(str(stock) + " г")
         return quantities
+
+    def updatePrice(self, index):
+        selectedQuantity = self.quantityComboBox.currentText()
+        quantityInGrams = int(selectedQuantity.replace(" г", ""))
+        totalPrice = self.tea['price'] * (quantityInGrams) / 5  # Предполагаем, что цена указана за килограмм
+        self.priceLabel.setText(f"Цена: {totalPrice:.2f} ₽")
 
     def buyTea(self):
         if self.teaShopApp.userId == 0:

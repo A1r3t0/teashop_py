@@ -115,7 +115,7 @@ class DatabaseHelper:
 
     @staticmethod
     def getSupplierById(supplierId):
-        query = "SELECT * FROM suppliers WHERE id = %s"
+        query = "SELECT id, name, contact_info, YEAR(created_at) as created_year FROM suppliers WHERE id = %s"
         connection = DatabaseHelper.getConnection()
         cursor = connection.cursor(dictionary=True)
         cursor.execute(query, (supplierId,))

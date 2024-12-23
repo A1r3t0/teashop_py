@@ -103,7 +103,7 @@ class CartPanel(QWidget):
     def calculateTotalPrice(self):
         totalPrice = 0
         for item in self.allCartItems:
-            totalPrice += item['quantity'] * item['price']
+            totalPrice += item['quantity'] * item['price'] / 5
         self.totalPriceLabel.setText(f"{totalPrice:.2f} ₽")
 
     def checkout(self):
