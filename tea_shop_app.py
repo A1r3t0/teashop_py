@@ -77,9 +77,10 @@ class TeaShopApp(QMainWindow):
         personalCabinetButton.clicked.connect(self.showPersonalCabinet)
         buttonLayout.addWidget(personalCabinetButton)
 
-        logoutButton = QPushButton("Выйти")
-        logoutButton.clicked.connect(self.logout)
-        buttonLayout.addWidget(logoutButton)
+        if self.userId != 0:  # Проверка, вошел ли пользователь в систему
+            logoutButton = QPushButton("Выйти")
+            logoutButton.clicked.connect(self.logout)
+            buttonLayout.addWidget(logoutButton)
 
         buttonPanel.setLayout(buttonLayout)
         topLayout.addWidget(buttonPanel)
@@ -93,6 +94,7 @@ class TeaShopApp(QMainWindow):
         self.tabWidget.removeTab(self.tabWidget.indexOf(self.profilePanel))
         self.tabWidget.setCurrentIndex(0)
         self.cartPanel.loadCartItems()  # Обновляем корзину после выхода
+        self.updateTopPanel()  # Обновляем верхнюю панель после выхода
         QMessageBox.information(self, "Выход", "Вы успешно вышли из аккаунта.")
 
     def showPersonalCabinet(self):
@@ -142,6 +144,7 @@ class TeaShopApp(QMainWindow):
             self.tabWidget.setCurrentWidget(self.profilePanel)
             self.loadUserDataIntoProfile()
             self.updateTabsBasedOnRole()
+            self.updateTopPanel()  # Обновляем верхнюю панель после входа
         else:
             statusLabel.setText("Неверный email или пароль.")
 
@@ -184,6 +187,7 @@ class TeaShopApp(QMainWindow):
             self.tabWidget.setCurrentWidget(self.profilePanel)
             self.loadUserDataIntoProfile()
             self.updateTabsBasedOnRole()
+            self.updateTopPanel()  # Обновляем верхнюю панель после регистрации
         else:
             statusLabel.setText("Не удалось зарегистрироваться.")
 
@@ -350,6 +354,13 @@ class TeaShopApp(QMainWindow):
         else:
             self.tabWidget.removeTab(self.tabWidget.indexOf(self.adminPanel))
             self.tabWidget.addTab(self.cartPanel, "Корзина")
+
+    def updateTopPanel(self):
+        topPanel = self.createTopPanel()
+        mainLayout = self.centralWidget().layout()
+        oldTopPanel = mainLayout.itemAt(0).widget()
+        mainLayout.replaceWidget(oldTopPanel, topPanel)
+        oldTopPanel.deleteLater()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
