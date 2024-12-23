@@ -1,8 +1,11 @@
 import sys
+
+from PySide6 import QtGui
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QVBoxLayout, QWidget, QLabel,
     QPushButton, QLineEdit, QFormLayout, QDialog, QMessageBox, QScrollArea,
-    QHBoxLayout, QGridLayout, QTableWidget, QTableWidgetItem, QSpinBox, QFrame
+    QHBoxLayout, QGridLayout, QTableWidget, QTableWidgetItem, QSpinBox, QFrame,
+    QComboBox
 )
 from PySide6.QtGui import QPixmap, QFont, QColor
 from PySide6.QtCore import Qt
@@ -33,9 +36,13 @@ class TeaShopApp(QMainWindow):
         self.catalogPanel = self.createCatalogPanel()
         self.cartPanel = CartPanel(self)  # Используем новый класс CartPanel
         self.ordersPanel = self.createOrdersPanel()  # Создаем панель заказов
+        self.adminPanel = self.createAdminPanel()  # Создаем админ-панель
 
         self.tabWidget.addTab(self.catalogPanel, "Каталог чаев")
-        self.tabWidget.addTab(self.cartPanel, "Корзина")
+        if self.userRole == "admin":
+            self.tabWidget.addTab(self.adminPanel, "Админ-панель")
+        else:
+            self.tabWidget.addTab(self.cartPanel, "Корзина")
         self.tabWidget.addTab(self.ordersPanel, "Мои заказы")  # Добавляем новую вкладку
 
         self.tabWidget.currentChanged.connect(self.onTabChanged)
@@ -50,11 +57,12 @@ class TeaShopApp(QMainWindow):
         self.setCentralWidget(centralWidget)
 
     def createTopPanel(self):
+        QtGui.QImageReader.setAllocationLimit(0)
         topPanel = QWidget()
         topLayout = QHBoxLayout()
 
         logoLabel = QLabel()
-        pixmap = QPixmap("logo.png").scaled(80, 80, Qt.KeepAspectRatio)
+        pixmap = QPixmap("logo1.png").scaled(100, 100, Qt.KeepAspectRatio)
         logoLabel.setPixmap(pixmap)
         topLayout.addWidget(logoLabel)
 
@@ -133,6 +141,7 @@ class TeaShopApp(QMainWindow):
                 self.tabWidget.addTab(self.profilePanel, "Профиль пользователя")
             self.tabWidget.setCurrentWidget(self.profilePanel)
             self.loadUserDataIntoProfile()
+            self.updateTabsBasedOnRole()
         else:
             statusLabel.setText("Неверный email или пароль.")
 
@@ -174,6 +183,7 @@ class TeaShopApp(QMainWindow):
                 self.tabWidget.addTab(self.profilePanel, "Профиль пользователя")
             self.tabWidget.setCurrentWidget(self.profilePanel)
             self.loadUserDataIntoProfile()
+            self.updateTabsBasedOnRole()
         else:
             statusLabel.setText("Не удалось зарегистрироваться.")
 
@@ -233,6 +243,36 @@ class TeaShopApp(QMainWindow):
             self.ordersTable.setItem(row, 0, QTableWidgetItem(str(order['id'])))
             self.ordersTable.setItem(row, 1, QTableWidgetItem(order['order_date'].strftime("%Y-%m-%d %H:%M:%S")))
             self.ordersTable.setItem(row, 2, QTableWidgetItem(order['status']))
+
+    def createAdminPanel(self):
+        adminPanel = QWidget()
+        adminLayout = QVBoxLayout()
+
+        self.adminOrdersTable = QTableWidget()
+        self.adminOrdersTable.setColumnCount(4)
+        self.adminOrdersTable.setHorizontalHeaderLabels(["ID", "Дата", "Статус", "Действие"])
+        adminLayout.addWidget(self.adminOrdersTable)
+
+        adminPanel.setLayout(adminLayout)
+        return adminPanel
+
+    def loadAdminOrders(self):
+        orders = DatabaseHelper.getAllOrders()
+        self.adminOrdersTable.setRowCount(len(orders))
+        for row, order in enumerate(orders):
+            self.adminOrdersTable.setItem(row, 0, QTableWidgetItem(str(order['id'])))
+            self.adminOrdersTable.setItem(row, 1, QTableWidgetItem(order['order_date'].strftime("%Y-%m-%d %H:%M:%S")))
+            self.adminOrdersTable.setItem(row, 2, QTableWidgetItem(order['status']))
+
+            statusComboBox = QComboBox()
+            statusComboBox.addItems(["В ожидании", "Подтверждено", "Отклонено"])
+            statusComboBox.setCurrentText(order['status'])
+            statusComboBox.currentTextChanged.connect(lambda text, orderId=order['id']: self.updateOrderStatus(orderId, text))
+            self.adminOrdersTable.setCellWidget(row, 3, statusComboBox)
+
+    def updateOrderStatus(self, orderId, status):
+        DatabaseHelper.updateOrderStatus(orderId, status)
+        QMessageBox.information(self, "Успех", f"Статус заказа {orderId} обновлен.")
 
     def createCatalogPanel(self):
         catalogPanel = QWidget()
@@ -300,7 +340,16 @@ class TeaShopApp(QMainWindow):
             self.cartPanel.loadCartItems()
         elif index == self.tabWidget.indexOf(self.ordersPanel):
             self.loadUserOrders()
+        elif index == self.tabWidget.indexOf(self.adminPanel):
+            self.loadAdminOrders()
 
+    def updateTabsBasedOnRole(self):
+        if self.userRole == "admin":
+            self.tabWidget.removeTab(self.tabWidget.indexOf(self.cartPanel))
+            self.tabWidget.addTab(self.adminPanel, "Админ-панель")
+        else:
+            self.tabWidget.removeTab(self.tabWidget.indexOf(self.adminPanel))
+            self.tabWidget.addTab(self.cartPanel, "Корзина")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

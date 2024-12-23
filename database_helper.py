@@ -293,16 +293,6 @@ class DatabaseHelper:
         connection.close()
         return result
 
-    def getUserOrders(userId):
-        query = "SELECT id, order_date, status FROM orders WHERE user_id = %s AND status = 'Подтверждено'"
-        connection = DatabaseHelper.getConnection()
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute(query, (userId,))
-        result = cursor.fetchall()
-        cursor.close()
-        connection.close()
-        return result
-
     @staticmethod
     def getOrderDetails(orderId):
         query = """
@@ -412,3 +402,24 @@ class DatabaseHelper:
         finally:
             cursor.close()
             connection.close()
+
+    @staticmethod
+    def getAllOrders():
+        query = "SELECT id, order_date, status FROM orders"
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(query)
+        result = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return result
+
+    @staticmethod
+    def updateOrderStatus(orderId, status):
+        query = "UPDATE orders SET status = %s WHERE id = %s"
+        connection = DatabaseHelper.getConnection()
+        cursor = connection.cursor()
+        cursor.execute(query, (status, orderId))
+        connection.commit()
+        cursor.close()
+        connection.close()
