@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QVBoxLayout, QWidget, QLabel,
     QPushButton, QLineEdit, QFormLayout, QDialog, QMessageBox, QScrollArea,
     QHBoxLayout, QGridLayout, QTableWidget, QTableWidgetItem, QSpinBox, QFrame,
-    QComboBox
+    QComboBox, QHeaderView
 )
 from PySide6.QtGui import QPixmap, QFont, QColor
 from PySide6.QtCore import Qt
@@ -229,8 +229,9 @@ class TeaShopApp(QMainWindow):
         ordersLayout = QVBoxLayout()
 
         self.ordersTable = QTableWidget()
-        self.ordersTable.setColumnCount(4)
-        self.ordersTable.setHorizontalHeaderLabels(["ID", "ID заказа", "ID чая", "Количество"])
+        self.ordersTable.setColumnCount(3)
+        self.ordersTable.setHorizontalHeaderLabels(["Название чая", "Количество", "Статус"])
+        self.ordersTable.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         ordersLayout.addWidget(self.ordersTable)
 
         ordersPanel.setLayout(ordersLayout)
@@ -244,10 +245,11 @@ class TeaShopApp(QMainWindow):
 
         self.ordersTable.setRowCount(len(orders))
         for row, order in enumerate(orders):
-            self.ordersTable.setItem(row, 0, QTableWidgetItem(str(order['id'])))
-            self.ordersTable.setItem(row, 1, QTableWidgetItem(str(order['admin_order_id'])))
-            self.ordersTable.setItem(row, 2, QTableWidgetItem(str(order['tea_id'])))
-            self.ordersTable.setItem(row, 3, QTableWidgetItem(str(order['quantity'])))
+            self.ordersTable.setItem(row, 0, QTableWidgetItem(str(order['tea_name'])))
+            self.ordersTable.setItem(row, 1, QTableWidgetItem(str(order['quantity'])))
+            self.ordersTable.setItem(row, 2, QTableWidgetItem(order['status']))
+            #self.ordersTable.setItem(row, 3, QTableWidgetItem(str(order['quantity'])))
+            #self.ordersTable.setItem(row, 4, QTableWidgetItem(order['status']))
 
     def createAdminPanel(self):
         adminPanel = QWidget()
@@ -256,6 +258,7 @@ class TeaShopApp(QMainWindow):
         self.adminOrdersTable = QTableWidget()
         self.adminOrdersTable.setColumnCount(4)
         self.adminOrdersTable.setHorizontalHeaderLabels(["ID", "Дата", "Статус", "Действие"])
+        self.adminOrdersTable.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         adminLayout.addWidget(self.adminOrdersTable)
 
         addTeaButton = QPushButton("Добавить чай")

@@ -496,9 +496,10 @@ class DatabaseHelper:
     @staticmethod
     def getAdminOrders(adminId):
         query = """
-        SELECT aot.id, aot.admin_order_id, aot.tea_id, aot.quantity
+        SELECT aot.id, aot.admin_order_id, t.name AS tea_name, aot.quantity, ao.status
         FROM admin_order_tea aot
         JOIN admin_orders ao ON aot.admin_order_id = ao.id
+        JOIN teas t ON aot.tea_id = t.id
         WHERE ao.admin_id = %s
         """
         connection = DatabaseHelper.getConnection()
