@@ -39,11 +39,8 @@ class TeaShopApp(QMainWindow):
         self.adminPanel = self.createAdminPanel()  # Создаем админ-панель
 
         self.tabWidget.addTab(self.catalogPanel, "Каталог чаев")
-        if self.userRole == "admin":
-            self.tabWidget.addTab(self.adminPanel, "Админ-панель")
-        else:
-            self.tabWidget.addTab(self.cartPanel, "Корзина")
-        self.tabWidget.addTab(self.ordersPanel, "Мои заказы")  # Добавляем новую вкладку
+        self.tabWidget.addTab(self.ordersPanel, "Мои заказы")  # Добавляем вкладку "Мои заказы"
+        self.updateTabsBasedOnRole()  # Обновляем вкладки в зависимости от роли пользователя
 
         self.tabWidget.currentChanged.connect(self.onTabChanged)
 
@@ -95,6 +92,7 @@ class TeaShopApp(QMainWindow):
         self.tabWidget.setCurrentIndex(0)
         self.cartPanel.loadCartItems()  # Обновляем корзину после выхода
         self.updateTopPanel()  # Обновляем верхнюю панель после выхода
+        self.updateTabsBasedOnRole()  # Обновляем вкладки после выхода
         QMessageBox.information(self, "Выход", "Вы успешно вышли из аккаунта.")
 
     def showPersonalCabinet(self):
@@ -340,6 +338,12 @@ class TeaShopApp(QMainWindow):
         return (len(self.allTeas) + self.itemsPerPage - 1) // self.itemsPerPage
 
     def onTabChanged(self, index):
+        if index == self.tabWidget.indexOf(self.cartPanel) or index == self.tabWidget.indexOf(self.ordersPanel):
+            if self.userId == 0:
+                self.showLoginDialog()
+                self.tabWidget.setCurrentIndex(0)  # Возвращаемся на первую вкладку
+                return
+
         if index == self.tabWidget.indexOf(self.cartPanel):
             self.cartPanel.loadCartItems()
         elif index == self.tabWidget.indexOf(self.ordersPanel):
@@ -349,11 +353,13 @@ class TeaShopApp(QMainWindow):
 
     def updateTabsBasedOnRole(self):
         if self.userRole == "admin":
+            if self.tabWidget.indexOf(self.adminPanel) == -1:
+                self.tabWidget.addTab(self.adminPanel, "Админ-панель")
             self.tabWidget.removeTab(self.tabWidget.indexOf(self.cartPanel))
-            self.tabWidget.addTab(self.adminPanel, "Админ-панель")
         else:
+            if self.tabWidget.indexOf(self.cartPanel) == -1:
+                self.tabWidget.addTab(self.cartPanel, "Корзина")
             self.tabWidget.removeTab(self.tabWidget.indexOf(self.adminPanel))
-            self.tabWidget.addTab(self.cartPanel, "Корзина")
 
     def updateTopPanel(self):
         topPanel = self.createTopPanel()
