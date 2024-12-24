@@ -230,7 +230,7 @@ class TeaShopApp(QMainWindow):
 
         self.ordersTable = QTableWidget()
         self.ordersTable.setColumnCount(3)
-        self.ordersTable.setHorizontalHeaderLabels(["Название чая", "Количество", "Статус"])
+        self.ordersTable.setHorizontalHeaderLabels(["ID", "Дата", "Статус"])
         self.ordersTable.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         ordersLayout.addWidget(self.ordersTable)
 
@@ -238,18 +238,12 @@ class TeaShopApp(QMainWindow):
         return ordersPanel
 
     def loadUserOrders(self):
-        if self.userRole == "admin":
-            orders = DatabaseHelper.getAdminOrders(self.userId)
-        else:
-            orders = DatabaseHelper.getUserOrders(self.userId)
-
+        orders = DatabaseHelper.getUserOrders(self.userId)
         self.ordersTable.setRowCount(len(orders))
         for row, order in enumerate(orders):
-            self.ordersTable.setItem(row, 0, QTableWidgetItem(str(order['tea_name'])))
-            self.ordersTable.setItem(row, 1, QTableWidgetItem(str(order['quantity'])))
+            self.ordersTable.setItem(row, 0, QTableWidgetItem(str(order['id'])))
+            self.ordersTable.setItem(row, 1, QTableWidgetItem(order['order_date'].strftime("%Y-%m-%d %H:%M:%S")))
             self.ordersTable.setItem(row, 2, QTableWidgetItem(order['status']))
-            #self.ordersTable.setItem(row, 3, QTableWidgetItem(str(order['quantity'])))
-            #self.ordersTable.setItem(row, 4, QTableWidgetItem(order['status']))
 
     def createAdminPanel(self):
         adminPanel = QWidget()
