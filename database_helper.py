@@ -1,5 +1,6 @@
 import mysql.connector
 from mysql.connector import Error
+import bcrypt
 
 class DatabaseHelper:
     @staticmethod
@@ -19,24 +20,28 @@ class DatabaseHelper:
 
     @staticmethod
     def getUserByEmailAndPassword(email, password):
-        query = "SELECT * FROM users WHERE email = %s AND password_hash = %s"
+        query = "SELECT * FROM users WHERE email = %s"
         connection = DatabaseHelper.getConnection()
         cursor = connection.cursor(dictionary=True)
-        cursor.execute(query, (email, password))
-        result = cursor.fetchone()
+        cursor.execute(query, (email,))
+        user = cursor.fetchone()
         cursor.close()
         connection.close()
-        return result
+
+        if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+            return user
+        return None
 
     @staticmethod
     def registerUser(email, password, fullName, phone):
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         insertQuery = "INSERT INTO users (email, password_hash, full_name, phone, role) VALUES (%s, %s, %s, %s, 'customer')"
         selectQuery = "SELECT * FROM users WHERE email = %s AND password_hash = %s"
         connection = DatabaseHelper.getConnection()
         cursor = connection.cursor(dictionary=True)
-        cursor.execute(insertQuery, (email, password, fullName, phone))
+        cursor.execute(insertQuery, (email, hashed_password, fullName, phone))
         connection.commit()
-        cursor.execute(selectQuery, (email, password))
+        cursor.execute(selectQuery, (email, hashed_password))
         result = cursor.fetchone()
         cursor.close()
         connection.close()

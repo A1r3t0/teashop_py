@@ -219,7 +219,7 @@ class TeaShopApp(QMainWindow):
 
         profilePanel.setLayout(profileLayout)
         return profilePanel
-    
+
     def updateUserProfile(self):
         fullName = self.profileFullNameField.text()
         phone = self.profilePhoneField.text()
