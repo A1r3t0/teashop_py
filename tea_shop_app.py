@@ -191,22 +191,35 @@ class TeaShopApp(QMainWindow):
         profilePanel = QWidget()
         profileLayout = QVBoxLayout()
 
+        profileTitle = QLabel("Профиль пользователя")
+        profileTitle.setFont(QFont("Arial", 18, QFont.Bold))
+        profileTitle.setAlignment(Qt.AlignCenter)
+        profileLayout.addWidget(profileTitle)
+
+        profileFormLayout = QFormLayout()
+
         self.profileEmailField = QLineEdit()
         self.profileFullNameField = QLineEdit()
         self.profilePhoneField = QLineEdit()
 
-        profileLayout.addWidget(QLabel("Профиль пользователя"))
-        profileLayout.addWidget(self.profileEmailField)
-        profileLayout.addWidget(self.profileFullNameField)
-        profileLayout.addWidget(self.profilePhoneField)
+        self.profileEmailField.setStyleSheet("border: 1px solid #ccc; padding: 5px; margin: 5px 0;")
+        self.profileFullNameField.setStyleSheet("border: 1px solid #ccc; padding: 5px; margin: 5px 0;")
+        self.profilePhoneField.setStyleSheet("border: 1px solid #ccc; padding: 5px; margin: 5px 0;")
+
+        profileFormLayout.addRow("Email:", self.profileEmailField)
+        profileFormLayout.addRow("Полное имя:", self.profileFullNameField)
+        profileFormLayout.addRow("Телефон:", self.profilePhoneField)
+
+        profileLayout.addLayout(profileFormLayout)
 
         saveButton = QPushButton("Обновить профиль")
+        saveButton.setStyleSheet("background-color: #66CC33; color: white; font: bold 14px; padding: 10px 20px;")
         saveButton.clicked.connect(self.updateUserProfile)
         profileLayout.addWidget(saveButton)
 
         profilePanel.setLayout(profileLayout)
         return profilePanel
-
+    
     def updateUserProfile(self):
         fullName = self.profileFullNameField.text()
         phone = self.profilePhoneField.text()
